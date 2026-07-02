@@ -14,9 +14,51 @@ const router = createRouter({
     },
     {
       path: '/',
-      name: 'home',
-      component: () => import('@/views/HomeView.vue'),
+      component: () => import('@/layouts/AppLayout.vue'),
       meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'home',
+          component: () => import('@/views/HomeView.vue'),
+          meta: { requiresAuth: true, heading: 'Главная панель' },
+        },
+        {
+          path: 'references',
+          redirect: { name: 'reference-materials' },
+          meta: { requiresAuth: true },
+        },
+        {
+          path: 'references/materials',
+          name: 'reference-materials',
+          component: () => import('@/views/references/MaterialsView.vue'),
+          meta: { requiresAuth: true, heading: 'Материалы' },
+        },
+        {
+          path: 'references/colors',
+          name: 'reference-colors',
+          component: () => import('@/views/references/ColorsView.vue'),
+          meta: { requiresAuth: true, heading: 'Цвета' },
+        },
+        {
+          path: 'references/sizes',
+          name: 'reference-sizes',
+          component: () => import('@/views/references/SizesView.vue'),
+          meta: { requiresAuth: true, heading: 'Размеры' },
+        },
+        {
+          path: 'references/category-groups',
+          name: 'reference-category-groups',
+          component: () => import('@/views/references/CategoryGroupsView.vue'),
+          meta: { requiresAuth: true, heading: 'Группы категорий' },
+        },
+        {
+          path: 'references/categories',
+          name: 'reference-categories',
+          component: () => import('@/views/references/CategoriesView.vue'),
+          meta: { requiresAuth: true, heading: 'Категории' },
+        },
+      ],
     },
   ],
 })

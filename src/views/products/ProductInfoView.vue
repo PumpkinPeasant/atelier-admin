@@ -1,98 +1,131 @@
-<template>
-  <section class="workspace">
-    <div class="workspace__panel">
-      <div class="workspace__header">
-        <div>
-          <p class="workspace__eyebrow">Товары</p>
-          <h2 class="workspace__title">Информация о товарах</h2>
-        </div>
-      </div>
+<script setup lang="ts">
+import DataTable from '@/components/ui/table/DataTable.vue'
+import DataTableHeader from '@/components/ui/table/DataTableHeader.vue'
+import DataTablePagination from '@/components/ui/table/DataTablePagination.vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { productsApi, type ProductTableRow } from '@/services/products'
+import { useNotificationsStore } from '@/stores/notifications'
+import type { TableHeader } from '@/interfaces/ui/table.interface'
 
-      <div class="workspace__body">
-        <div class="workspace__row">
-          <span class="workspace__label">Назначение</span>
-          <span class="workspace__value">Базовые данные товаров, состав, характеристики и связи.</span>
-        </div>
-        <div class="workspace__row">
-          <span class="workspace__label">Статус</span>
-          <span class="workspace__value">Раздел подготовлен под подключение товарного API.</span>
-        </div>
-      </div>
-    </div>
+const notifications = useNotificationsStore()
+
+const headers: TableHeader<ProductTableRow>[] = [
+  { key: 'id', title: 'ID', sortable: true },
+  { key: 'name', title: 'Товар', sortable: true },
+  { key: 'categoryLabel', title: 'Категория', sortable: true },
+  { key: 'genderLabel', title: 'Пол', sortable: true },
+  { key: 'fitLabel', title: 'Посадка', sortable: true },
+  { key: 'density', title: 'Плотность', sortable: true },
+  { key: 'priceLabel', title: 'Цена', sortable: true },
+  { key: 'variantsCount', title: 'Варианты', sortable: true },
+  { key: 'stockLabel', title: 'Остаток', sortable: true },
+  { key: 'cardStatusLabel', title: 'Карточка', sortable: true },
+]
+
+const { items, totalCount, currentPage, pageSize, sortData, isLoading, loadItems, search } =
+  useDataTable<ProductTableRow>(productsApi.listProducts)
+
+const notImplemented = () => notifications.info('Редактирование товаров появится позже')
+
+const createCard = async (item: ProductTableRow) => {
+  try {
+    await productsApi.createProductCard(item.id)
+    notifications.success('Карточка товара создана')
+    await loadItems()
+  } catch {
+    notifications.error('Не удалось создать карточку товара')
+  }
+}
+</script>
+
+<template>
+  <section class="card">
+    <DataTableHeader
+      search-placeholder="Поиск по товарам"
+      create-btn-text="Добавить товар"
+      @on-search-input="search"
+      @on-create-click="notImplemented"
+    >
+      <template #append>
+        <button class="btn-regular" type="button" @click="loadItems">
+          <i v-lucide="'refresh-cw'" />
+          Обновить
+        </button>
+      </template>
+    </DataTableHeader>
+
+    <DataTable
+      :is-loading="isLoading"
+      v-model:sort-data="sortData"
+      @update:sort="loadItems"
+      :headers="headers"
+      :items="items"
+      empty-state-title="Товары не найдены"
+      empty-state-description="Создайте товары на бэкенде или сбросьте поиск."
+    >
+      <template #density="{ item }"> {{ item.density }} г/м² </template>
+
+      <template #compositionLabel="{ item }">
+        <span class="muted-cell" :title="item.compositionLabel">
+          {{ item.compositionLabel }}
+        </span>
+      </template>
+
+      <template #cardStatusLabel="{ item }">
+        <span class="status" :class="{ 'status--empty': !item.hasCard }">
+          {{ item.cardStatusLabel }}
+        </span>
+      </template>
+
+      <template #actions="{ item }">
+        <button
+          v-if="!item.hasCard"
+          title="Создать карточку"
+          class="btn-secondary-icon"
+          type="button"
+          @click="createCard(item)"
+        >
+          <i v-lucide="'panel-top'" />
+        </button>
+        <button title="Редактировать" class="btn-secondary-icon" type="button" @click="notImplemented">
+          <i v-lucide="'edit-2'" />
+        </button>
+      </template>
+    </DataTable>
+
+    <DataTablePagination
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :total-count="totalCount"
+      @update:page="loadItems"
+    />
   </section>
 </template>
 
 <style scoped>
-.workspace {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-300);
+.muted-cell {
+  display: inline-block;
+  max-width: 280px;
+  overflow: hidden;
+  color: var(--clr-neutral-700);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.workspace__panel {
-  padding: var(--size-500);
-  background: var(--clr-neutral-100);
-  border: 1px solid var(--clr-neutral-400);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--general-shadow);
-}
-
-.workspace__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding-bottom: var(--size-400);
-  border-bottom: 1px solid var(--clr-neutral-400);
-}
-
-.workspace__eyebrow {
-  margin-bottom: var(--size-100);
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--size-100);
   font-size: var(--fs-50);
   font-weight: var(--fw-bold);
-  color: var(--clr-neutral-500);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--clr-neutral-800);
+  background: var(--clr-neutral-300);
+  border-radius: var(--radius-sm);
 }
 
-.workspace__title {
-  font-family: var(--font-serif);
-  font-size: var(--fs-400);
-  font-weight: 600;
-}
-
-.workspace__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-300);
-  padding-top: var(--size-400);
-}
-
-.workspace__row {
-  display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
-  gap: var(--size-300);
-  align-items: start;
-}
-
-.workspace__label {
-  font-size: var(--fs-100);
-  font-weight: var(--fw-bold);
-  color: var(--clr-neutral-700);
-}
-
-.workspace__value {
-  font-size: var(--fs-100);
+.status--empty {
   color: var(--clr-neutral-600);
-}
-
-@media screen and (max-width: 768px) {
-  .workspace__panel {
-    padding: var(--size-300);
-  }
-
-  .workspace__row {
-    grid-template-columns: 1fr;
-    gap: var(--size-100);
-  }
+  background: transparent;
+  border: 1px solid var(--clr-neutral-400);
 }
 </style>

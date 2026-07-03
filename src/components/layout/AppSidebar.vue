@@ -35,6 +35,14 @@ const groups: NavGroup[] = [
       { title: 'Категории', href: '/references/categories', icon: 'shapes' },
     ],
   },
+  {
+    title: 'Товары',
+    links: [{ title: 'Информация о товарах', href: '/products/info', icon: 'boxes' }],
+  },
+  {
+    title: 'Сайт',
+    links: [{ title: 'Карточки товаров', href: '/site/product-cards', icon: 'edit' }],
+  },
 ]
 
 const handleNavigate = () => {

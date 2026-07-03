@@ -58,6 +58,18 @@ const router = createRouter({
           component: () => import('@/views/references/CategoriesView.vue'),
           meta: { requiresAuth: true, heading: 'Категории' },
         },
+        {
+          path: 'products/info',
+          name: 'products-info',
+          component: () => import('@/views/products/ProductInfoView.vue'),
+          meta: { requiresAuth: true, heading: 'Информация о товарах' },
+        },
+        {
+          path: 'site/product-cards',
+          name: 'site-product-cards',
+          component: () => import('@/views/site/ProductCardsAdminView.vue'),
+          meta: { requiresAuth: true, heading: 'Карточки товаров на сайте' },
+        },
       ],
     },
   ],
